@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Ticket Generator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            z-index: 10;
+        }
+        
+        header {
+            background: linear-gradient(to right, #2c3e50, #4a6491);
+            color: white;
+            text-align: center;
+            padding: 25px;
+            border-bottom: 5px solid #fdbb2d;
+            position: relative;
+        }
+        
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .content {
+            display: flex;
+            flex-wrap: wrap;
+            padding: 30px;
+        }
+        
+        .form-section {
+            flex: 1;
+            min-width: 300px;
+            padding: 20px;
+        }
+        
+        .ticket-section {
+            flex: 1;
+            min-width: 300px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 1.1rem;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        
+        input:focus, select:focus {
+            border-color: #4a6491;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(74, 100, 145, 0.2);
+            transform: translateY(-2px);
+        }
+        
+        button {
+            background: linear-gradient(to right, #2c3e50, #4a6491);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            border-radius: 10px;
+            cursor: pointer;
+            width: 100%;
+            font-weight: 600;
+            transition: all 0.3s;
+            margin-top: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        button:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transition: 0.5s;
+        }
+        
+        button:hover:before {
+            left: 100%;
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 7px 15px rgba(44, 62, 80, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 5px rgba(44, 62, 80, 0.4);
+        }
+        
+        .ticket-container {
+            position: relative;
+            margin-bottom: 25px;
+        }
+        
+        .ticket {
+            background: linear-gradient(to bottom, #ffffff, #f8f9fa);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            padding: 30px;
+            width: 100%;
+            max-width: 350px;
+            text-align: center;
+            border: 2px solid #4a6491;
+            position: relative;
+            overflow: hidden;
+            animation: scaleUp 0.4s ease-out;
+        }
+        
+        .ticket::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 8px;
+            background: linear-gradient(to right, #2c3e50, #4a6491, #fdbb2d);
+        }
+        
+        .ticket::after {
+            content: "VALID TICKET";
+            position: absolute;
+            top: 20px;
+            right: -35px;
+            background: #27ae60;
+            color: white;
+            padding: 5px 40px;
+            font-size: 14px;
+            font-weight: bold;
+            transform: rotate(45deg);
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+        }
+        
+        .ticket-title {
+            font-size: 1.8rem;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .event-title {
+            font-size: 1.4rem;
+            color: #e74c3c;
+            margin-bottom: 20px;
+            font-weight: 700;
+            border-bottom: 2px dashed #ddd;
+            padding-bottom: 15px;
+        }
+        
+        #qrcode {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+            min-height: 250px;
+            align-items: center;
+            background: white;
+            border-radius: 10px;
+            padding: 10px;
+            border: 1px solid #eee;
+        }
+        
+        .ticket-info {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px dashed #ddd;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+        
+        .info-label {
+            font-weight: 600;
+            color: #2c3e50;
+            text-align: left;
+        }
+        
+        .info-value {
+            color: #4a6491;
+            font-weight: 500;
+            text-align: right;
+        }
+        
+        .payment-info {
+            background: #f0f7ff;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            border-left: 4px solid #4a6491;
+        }
+        
+        .instructions {
+            background: linear-gradient(to right, #2c3e50, #4a6491);
+            color: white;
+            padding: 25px;
+            border-top: 2px solid #fdbb2d;
+        }
+        
+        .instructions h3 {
+            color: #fdbb2d;
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: 1.4rem;
+        }
+        
+        .steps {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .step {
+            text-align: center;
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .step-number {
+            background: #fdbb2d;
+            color: #2c3e50;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto 15px;
+            font-weight: 700;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .counter {
+            margin-top: 15px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2c3e50;
+            text-align: center;
+            background: #f0f7ff;
+            padding: 10px;
+            border-radius: 10px;
+        }
+        
+        .floating {
+            position: absolute;
+            animation: float 6s ease-in-out infinite;
+            opacity: 0.7;
+            z-index: 1;
+        }
+        
+        .floating:nth-child(1) {
+            top: 10%;
+            left: 10%;
+            font-size: 24px;
+            color: rgba(255,255,255,0.3);
+        }
+        
+        .floating:nth-child(2) {
+            top: 70%;
+            right: 15%;
+            font-size: 32px;
+            color: rgba(255,255,255,0.4);
+            animation-delay: 1s;
+        }
+        
+        .floating:nth-child(3) {
+            bottom: 20%;
+            left: 15%;
+            font-size: 40px;
+            color: rgba(255,255,255,0.2);
+            animation-delay: 2s;
+        }
+        
+        .floating:nth-child(4) {
+            top: 20%;
+            right: 20%;
+            font-size: 28px;
+            color: rgba(255,255,255,0.3);
+            animation-delay: 3s;
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(10deg); }
+            100% { transform: translateY(0) rotate(0deg); }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes scaleUp {
+            from { transform: scale(0.95); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        
+        @media (max-width: 768px) {
+            .content {
+                flex-direction: column;
+            }
+            
+            header h1 {
+                font-size: 2rem;
+            }
+        }
+        
+        .price-display {
+            font-size: 1.3rem;
+            margin: 10px 0;
+            padding: 10px;
+            background: #e8f4e8;
+            border-radius: 8px;
+            font-weight: bold;
+            color: #27ae60;
+            text-align: center;
+        }
+        
+        .event-option {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border: 2px solid #eee;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+        }
+        
+        .event-option:hover {
+            border-color: #4a6491;
+            background: #f8f9fa;
+            transform: translateY(-3px);
+        }
+        
+        .event-option.selected {
+            border-color: #4a6491;
+            background: #eef5ff;
+            box-shadow: 0 0 0 3px rgba(74, 100, 145, 0.2);
+            transform: translateY(-5px);
+        }
+        
+        .event-option i {
+            font-size: 28px;
+            margin-right: 15px;
+            color: #4a6491;
+            width: 40px;
+            text-align: center;
+        }
+        
+        .event-details {
+            flex: 1;
+        }
+        
+        .event-name {
+            font-weight: 700;
+            color: #2c3e50;
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+        }
+        
+        .event-price {
+            color: #27ae60;
+            font-weight: 700;
+            font-size: 1.3rem;
+        }
+        
+        .total-section {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 10px;
+            border: 2px solid #eee;
+        }
+        
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 1.2rem;
+            margin-bottom: 8px;
+        }
+        
+        .total-label {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .total-value {
+            font-weight: 700;
+            color: #e74c3c;
+        }
+        
+        .savings {
+            color: #27ae60;
+            font-weight: 600;
+            text-align: center;
+            margin-top: 10px;
+            font-size: 1.1rem;
+        }
+        
+        .download-btn {
+            background: linear-gradient(to right, #27ae60, #2ecc71);
+            margin-top: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .download-btn:hover {
+            background: linear-gradient(to right, #219653, #27ae60);
+        }
+        
+        .download-btn:disabled {
+            background: linear-gradient(to right, #95a5a6, #bdc3c7);
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        
+        .download-btn:disabled:hover:before {
+            left: -100%;
+        }
+        
+        .download-section {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            max-width: 350px;
+        }
+        
+        .download-options {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .option-btn {
+            flex: 1;
+            padding: 12px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+        
+        .download-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            font-size: 0.9rem;
+            text-align: center;
+            color: #7f8c8d;
+        }
+    </style>
+</head>
+<body>
+    <!-- Floating QR code decorations -->
+    <div class="floating"><i class="fas fa-qrcode"></i></div>
+    <div class="floating"><i class="fas fa-ticket-alt"></i></div>
+    <div class="floating"><i class="fas fa-qrcode"></i></div>
+    <div class="floating"><i class="fas fa-ticket-alt"></i></div>
+    
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-ticket-alt"></i> Event Ticket Generator</h1>
+            <p>Create and download personalized tickets for graduation and prom events</p>
+        </header>
+        
+        <div class="content">
+            <div class="form-section">
+                <h2 style="color: #2c3e50; margin-bottom: 25px; text-align: center;"><i class="fas fa-edit"></i> Ticket Details</h2>
+                
+                <div class="form-group">
+                    <label for="eventType">Select Event</label>
+                    <div class="event-option" data-value="graduation" data-price="1200">
+                        <i class="fas fa-graduation-cap"></i>
+                        <div class="event-details">
+                            <div class="event-name">Graduation Ceremony</div>
+                            <div class="event-price">1200 birr</div>
+                        </div>
+                    </div>
+                    
+                    <div class="event-option" data-value="prom" data-price="2200">
+                        <i class="fas fa-crown"></i>
+                        <div class="event-details">
+                            <div class="event-name">Prom Night</div>
+                            <div class="event-price">2200 birr</div>
+                        </div>
+                    </div>
+                    
+                    <div class="event-option" data-value="both" data-price="3000">
+                        <i class="fas fa-ticket-alt"></i>
+                        <div class="event-details">
+                            <div class="event-name">Both Events</div>
+                            <div class="event-price">3000 birr</div>
+                            <div class="savings">(Save 400 birr)</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="name">Full Name</label>
+                    <input type="text" id="name" placeholder="Enter your full name">
+                </div>
+                
+                <div class="form-group">
+                    <label for="phone">Phone Number</label>
+                    <input type="tel" id="phone" placeholder="Enter your phone number">
+                </div>
+                
+                <div class="total-section">
+                    <div class="total-row">
+                        <span class="total-label">Selected Price:</span>
+                        <span class="total-value" id="priceDisplay">0 birr</span>
+                    </div>
+                    <div class="total-row">
+                        <span class="total-label">Payment Status:</span>
+                        <span class="total-value" style="color: #27ae60;">PAID</span>
+                    </div>
+                </div>
+                
+                <button id="generateBtn">
+                    <i class="fas fa-qrcode"></i> Generate Ticket
+                </button>
+                
+                <div class="counter">
+                    <i class="fas fa-ticket-alt"></i> Tickets Generated: <span id="ticketCount">0</span>
+                </div>
+            </div>
+            
+            <div class="ticket-section">
+                <h2 style="color: #2c3e50; margin-bottom: 25px; text-align: center;"><i class="fas fa-ticket-alt"></i> Your Event Ticket</h2>
+                
+                <div class="ticket-container">
+                    <div class="ticket" id="ticket">
+                        <div class="ticket-title">VIP ACCESS</div>
+                        <div class="event-title" id="ticketEvent">EVENT NAME</div>
+                        
+                        <div id="qrcode">
+                            <p style="color: #777; font-style: italic;">Your ticket QR code will appear here</p>
+                        </div>
+                        
+                        <div class="ticket-info">
+                            <div class="info-row">
+                                <span class="info-label">Name:</span>
+                                <span class="info-value" id="ticketName">-</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Phone:</span>
+                                <span class="info-value" id="ticketPhone">-</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Ticket ID:</span>
+                                <span class="info-value" id="ticketId">-</span>
+                            </div>
+                        </div>
+                        
+                        <div class="payment-info">
+                            <div class="info-row">
+                                <span class="info-label">Event:</span>
+                                <span class="info-value" id="ticketEventType">-</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Payment:</span>
+                                <span class="info-value" id="ticketPayment">0 birr</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Status:</span>
+                                <span class="info-value" style="color: #27ae60;">PAID</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="download-section">
+                    <button id="downloadBtn" class="download-btn" disabled>
+                        <i class="fas fa-download"></i> Download Ticket
+                    </button>
+                    
+                    <div class="download-options">
+                        <button class="option-btn" id="shareBtn">
+                            <i class="fas fa-share-alt"></i> Share
+                        </button>
+                        <button class="option-btn" id="printBtn">
+                            <i class="fas fa-print"></i> Print
+                        </button>
+                        <button class="option-btn" id="saveBtn">
+                            <i class="fas fa-save"></i> Save
+                        </button>
+                    </div>
+                    
+                    <div class="download-info">
+                        <i class="fas fa-info-circle"></i> Download your ticket as an image to print or share
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="instructions">
+            <h3>How to Create and Use Tickets</h3>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <p>Select event and enter details</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <p>Generate your unique QR ticket</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <p>Download and share your ticket</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const generateBtn = document.getElementById('generateBtn');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const nameInput = document.getElementById('name');
+            const phoneInput = document.getElementById('phone');
+            const priceDisplay = document.getElementById('priceDisplay');
+            const qrCodeDiv = document.getElementById('qrcode');
+            const ticketName = document.getElementById('ticketName');
+            const ticketPhone = document.getElementById('ticketPhone');
+            const ticketId = document.getElementById('ticketId');
+            const ticketEvent = document.getElementById('ticketEvent');
+            const ticketEventType = document.getElementById('ticketEventType');
+            const ticketPayment = document.getElementById('ticketPayment');
+            const ticketCount = document.getElementById('ticketCount');
+            const eventOptions = document.querySelectorAll('.event-option');
+            const shareBtn = document.getElementById('shareBtn');
+            const printBtn = document.getElementById('printBtn');
+            const saveBtn = document.getElementById('saveBtn');
+            
+            let selectedEvent = null;
+            let count = 0;
+            
+            // Event names mapping
+            const eventNames = {
+                'graduation': 'Graduation Ceremony',
+                'prom': 'Prom Night',
+                'both': 'Graduation & Prom Night'
+            };
+            
+            // Event selection handling
+            eventOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    // Remove selected class from all options
+                    eventOptions.forEach(opt => opt.classList.remove('selected'));
+                    
+                    // Add selected class to clicked option
+                    this.classList.add('selected');
+                    
+                    // Get event data
+                    selectedEvent = {
+                        type: this.getAttribute('data-value'),
+                        name: eventNames[this.getAttribute('data-value')],
+                        price: this.getAttribute('data-price')
+                    };
+                    
+                    // Update price display
+                    priceDisplay.textContent = `${selectedEvent.price} birr`;
+                });
+            });
+            
+            // Generate button handler
+            generateBtn.addEventListener('click', function() {
+                const name = nameInput.value.trim();
+                const phone = phoneInput.value.trim();
+                
+                if (!name || !phone) {
+                    alert('Please enter both name and phone number');
+                    return;
+                }
+                
+                if (!selectedEvent) {
+                    alert('Please select an event type');
+                    return;
+                }
+                
+                // Generate a unique ticket ID
+                const id = generateTicketId();
+                
+                // Update ticket information display
+                ticketName.textContent = name;
+                ticketPhone.textContent = phone;
+                ticketId.textContent = id;
+                ticketEvent.textContent = selectedEvent.name;
+                ticketEventType.textContent = selectedEvent.name;
+                ticketPayment.textContent = `${selectedEvent.price} birr`;
+                
+                // Format data for QR code
+                const qrData = `EVENT: ${selectedEvent.name}\nNAME: ${name}\nPHONE: ${phone}\nTICKET ID: ${id}\nPAYMENT: ${selectedEvent.price} birr\nSTATUS: PAID`;
+                
+                // Clear previous QR code
+                qrCodeDiv.innerHTML = '';
+                
+                // Generate new QR code
+                new QRCode(qrCodeDiv, {
+                    text: qrData,
+                    width: 200,
+                    height: 200,
+                    colorDark: "#2c3e50",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+                
+                // Update counter
+                count++;
+                ticketCount.textContent = count;
+                
+                // Enable download button
+                downloadBtn.disabled = false;
+                
+                // Add animation effect
+                document.querySelector('.ticket').style.animation = 'none';
+                setTimeout(() => {
+                    document.querySelector('.ticket').style.animation = 'scaleUp 0.4s ease-out';
+                }, 10);
+            });
+            
+            // Download button handler
+            downloadBtn.addEventListener('click', function() {
+                // Show loading effect
+                const originalText = downloadBtn.innerHTML;
+                downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Downloading...';
+                downloadBtn.disabled = true;
+                
+                // Use html2canvas to capture the ticket
+                html2canvas(document.getElementById('ticket'), {
+                    scale: 2,
+                    backgroundColor: null
+                }).then(canvas => {
+                    // Create download link
+                    const link = document.createElement('a');
+                    link.download = `ticket-${ticketId.textContent}.png`;
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                    
+                    // Restore button
+                    downloadBtn.innerHTML = originalText;
+                    downloadBtn.disabled = false;
+                    
+                    // Show success message
+                    showNotification('Ticket downloaded successfully!');
+                }).catch(err => {
+                    console.error('Error generating image:', err);
+                    downloadBtn.innerHTML = originalText;
+                    downloadBtn.disabled = false;
+                    alert('Error generating ticket image. Please try again.');
+                });
+            });
+            
+            // Share button handler
+            shareBtn.addEventListener('click', function() {
+                showNotification('Sharing feature requires device support');
+            });
+            
+            // Print button handler
+            printBtn.addEventListener('click', function() {
+                showNotification('Print feature coming soon');
+            });
+            
+            // Save button handler
+            saveBtn.addEventListener('click', function() {
+                showNotification('Ticket saved to your account');
+            });
+            
+            function generateTicketId() {
+                const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ0123456789';
+                let result = '';
+                for (let i = 0; i < 8; i++) {
+                    result += chars.charAt(Math.floor(Math.random() * chars.length));
+                }
+                return result;
+            }
+            
+            function showNotification(message) {
+                // Create notification element
+                const notification = document.createElement('div');
+                notification.textContent = message;
+                notification.style.position = 'fixed';
+                notification.style.bottom = '20px';
+                notification.style.left = '50%';
+                notification.style.transform = 'translateX(-50%)';
+                notification.style.backgroundColor = '#27ae60';
+                notification.style.color = 'white';
+                notification.style.padding = '15px 25px';
+                notification.style.borderRadius = '10px';
+                notification.style.boxShadow = '0 4px 15px rgba(0,0,0,0.2)';
+                notification.style.zIndex = '1000';
+                notification.style.opacity = '0';
+                notification.style.transition = 'opacity 0.3s';
+                
+                document.body.appendChild(notification);
+                
+                // Show notification
+                setTimeout(() => {
+                    notification.style.opacity = '1';
+                }, 10);
+                
+                // Hide after 3 seconds
+                setTimeout(() => {
+                    notification.style.opacity = '0';
+                    setTimeout(() => {
+                        document.body.removeChild(notification);
+                    }, 300);
+                }, 3000);
+            }
+            
+            // Initialize with a sample QR code
+            new QRCode(qrCodeDiv, {
+                text: "Scan this QR code to see your ticket information",
+                width: 150,
+                height: 150,
+                colorDark: "#cccccc",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        });
+    </script>
+</body>
+</html>
